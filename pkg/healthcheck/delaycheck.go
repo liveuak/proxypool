@@ -3,6 +3,7 @@ package healthcheck
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Sansui233/proxypool/log"
 	"github.com/Sansui233/proxypool/pkg/proxy"
 	"sync"
 	"time"
@@ -20,18 +21,21 @@ func CleanBadProxiesWithGrpool(proxies []proxy.Proxy) (cproxies []proxy.Proxy) {
 
 	c := make(chan *Stat)
 	defer close(c)
-
+	count := len(proxies)
+	log.Debugln("Count %d", count)
 	m := sync.Mutex{}
 	pool.WaitCount(len(proxies))
 	// 线程：延迟测试，测试过程通过grpool的job并发
 	go func() {
-		for _, p := range proxies {
+		for i, p := range proxies {
+			ii := i
 			pp := p // 捕获，否则job执行时是按当前的p测试的
 			pool.JobQueue <- func() {
 				defer pool.JobDone()
 				delay, err := testDelay(pp)
 				if err == nil {
 					m.Lock()
+					log.Debugln("Doing %d", ii)
 					if ps, ok := ProxyStats.Find(p); ok {
 						ps.UpdatePSDelay(delay)
 						c <- ps
@@ -43,6 +47,8 @@ func CleanBadProxiesWithGrpool(proxies []proxy.Proxy) (cproxies []proxy.Proxy) {
 						ProxyStats = append(ProxyStats, *ps)
 						c <- ps
 					}
+					count--
+					log.Debugln("Done %d, Count %d", ii, count)
 					m.Unlock()
 				}
 			}
