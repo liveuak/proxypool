@@ -91,7 +91,8 @@ func HTTPGetViaProxy(clashProxy C.Proxy, url string) error {
 }
 
 func HTTPHeadViaProxy(clashProxy C.Proxy, url string, ii int) error {
-	log.Debugln("Request proxy%d", ii)
+	log.Debugln("proxy %d line94", ii)
+	defer log.Debugln("proxy %d return", ii)
 	ctx, cancel := context.WithTimeout(context.Background(), defaultURLTestTimeout)
 	defer cancel()
 
@@ -99,12 +100,13 @@ func HTTPHeadViaProxy(clashProxy C.Proxy, url string, ii int) error {
 	if err != nil {
 		return err
 	}
+	log.Debugln("proxy %d line103 dial", ii)
 	conn, err := clashProxy.DialContext(ctx, &addr) // 建立到proxy server的connection，对Proxy的类别做了自适应相当于泛型
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
-	log.Debugln("Dial proxy%d", ii)
+	log.Debugln("proxy%d line109 dialed", ii)
 
 	req, err := http.NewRequest(http.MethodHead, url, nil)
 	if err != nil {
@@ -132,13 +134,12 @@ func HTTPHeadViaProxy(clashProxy C.Proxy, url string, ii int) error {
 			return http.ErrUseLastResponse
 		},
 	}
-	log.Debugln("Fetch proxy%d", ii)
+	log.Debugln("proxy %d fetch", ii)
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
 	resp.Body.Close()
-	log.Debugln("Done proxy%d", ii)
 	return nil
 }
 

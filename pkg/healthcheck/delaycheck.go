@@ -21,10 +21,8 @@ func CleanBadProxiesWithGrpool(proxies []proxy.Proxy) (cproxies []proxy.Proxy) {
 
 	c := make(chan *Stat)
 	defer close(c)
-	count := len(proxies)
 	debugList := make([]int, 0)
 	m := sync.Mutex{}
-	log.Debugln("Count %d", count)
 	pool.WaitCount(len(proxies))
 	// 线程：延迟测试，测试过程通过grpool的job并发
 	go func() {
@@ -54,7 +52,6 @@ func CleanBadProxiesWithGrpool(proxies []proxy.Proxy) (cproxies []proxy.Proxy) {
 						ProxyStats = append(ProxyStats, *ps)
 						c <- ps
 					}
-					count--
 				}
 			}
 		}
