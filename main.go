@@ -15,6 +15,7 @@ import (
 
 var configFilePath = ""
 var debugMode = false
+var traceMode = false
 
 func main() {
 	//go func() {
@@ -23,10 +24,14 @@ func main() {
 
 	flag.StringVar(&configFilePath, "c", "", "path to config file: config.yaml")
 	flag.BoolVar(&debugMode, "d", false, "debug output")
+	flag.BoolVar(&traceMode, "t", false, "trace output")
 	flag.Parse()
 
 	if debugMode {
 		log.SetLevel(log.DEBUG)
+	}
+	if traceMode {
+		log.SetLevel(log.TRACE)
 	}
 	if configFilePath == "" {
 		configFilePath = os.Getenv("CONFIG_FILE")

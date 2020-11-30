@@ -32,10 +32,8 @@ func CleanBadProxiesWithGrpool(proxies []proxy.Proxy) (cproxies []proxy.Proxy) {
 			pp := p // 捕获，否则job执行时是按当前的p测试的
 			pool.JobQueue <- func() {
 				defer pool.JobDone()
-				log.Debugln("Testing %d...", ii)
 				debugList = append(debugList, ii)
-				delay, err := testDelay(pp)
-				log.Debugln("Done test %d", ii)
+				delay, err := testDelay(pp, ii)
 				debugList = removeValueFromList(debugList, ii)
 				log.Debugln("%v", debugList)
 				if err == nil {
@@ -85,7 +83,8 @@ func CleanBadProxiesWithGrpool(proxies []proxy.Proxy) (cproxies []proxy.Proxy) {
 	}
 }
 
-func testDelay(p proxy.Proxy) (delay uint16, err error) {
+func testDelay(p proxy.Proxy, ii int) (delay uint16, err error) {
+	log.Traceln("Proxy %d", ii)
 	pmap := make(map[string]interface{})
 	err = json.Unmarshal([]byte(p.String()), &pmap)
 	if err != nil {
@@ -104,7 +103,9 @@ func testDelay(p proxy.Proxy) (delay uint16, err error) {
 	}
 
 	sTime := time.Now()
+	log.Traceln("Request proxy %d", ii)
 	err = HTTPHeadViaProxy(clashProxy, "http://www.gstatic.com/generate_204")
+	log.Traceln("Done proxy %d", ii)
 	if err != nil {
 		return
 	}
