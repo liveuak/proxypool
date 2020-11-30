@@ -106,7 +106,7 @@ func testDelay(p proxy.Proxy, ii int) (delay uint16, err error) {
 	}
 
 	if ii == 17 || ii == 460 || ii == 464 {
-		log.Debugln("proxy %d server", ii)
+		log.Debugln("proxy %d server: %s", ii, p.BaseInfo().Server)
 	}
 
 	sTime := time.Now()
