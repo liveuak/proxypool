@@ -21,20 +21,24 @@ func CleanBadProxiesWithGrpool(proxies []proxy.Proxy) (cproxies []proxy.Proxy) {
 	c := make(chan *Stat)
 	defer close(c)
 	count := len(proxies)
+	debugList := make([]int, 0)
 	log.Debugln("Count %d", count)
 	pool.WaitCount(len(proxies))
 	// 线程：延迟测试，测试过程通过grpool的job并发
 	go func() {
 		for i, p := range proxies {
 			ii := i
+			debugList = append(debugList, ii)
 			pp := p // 捕获，否则job执行时是按当前的p测试的
 			pool.JobQueue <- func() {
 				defer pool.JobDone()
 				log.Debugln("Testing %d...", ii)
+				debugList = append(debugList, ii)
 				delay, err := testDelay(pp)
 				log.Debugln("Done test %d", ii)
+				debugList = removeValueFromList(debugList, ii)
+				log.Debugln("%v", debugList)
 				if err == nil {
-					log.Debugln("Look up %d...", ii)
 					if ps, ok := ProxyStats.Find(p); ok {
 						ps.UpdatePSDelay(delay)
 						c <- ps
@@ -47,7 +51,6 @@ func CleanBadProxiesWithGrpool(proxies []proxy.Proxy) (cproxies []proxy.Proxy) {
 						c <- ps
 					}
 					count--
-					log.Debugln("Done %d, Count %d", ii, count)
 				}
 			}
 		}
@@ -109,4 +112,14 @@ func testDelay(p proxy.Proxy) (delay uint16, err error) {
 	delay = uint16(fTime.Sub(sTime) / time.Millisecond)
 
 	return delay, err
+}
+
+func removeValueFromList(list []int, value int) []int {
+	l := make([]int, 0)
+	for i, _ := range list {
+		if list[i] != value {
+			l = append(l, list[i])
+		}
+	}
+	return l
 }
