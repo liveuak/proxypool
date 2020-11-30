@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	C "github.com/Dreamacro/clash/constant"
+	"github.com/Sansui233/proxypool/log"
 	"github.com/Sansui233/proxypool/pkg/proxy"
 	"io/ioutil"
 	"net"
@@ -89,7 +90,8 @@ func HTTPGetViaProxy(clashProxy C.Proxy, url string) error {
 	return nil
 }
 
-func HTTPHeadViaProxy(clashProxy C.Proxy, url string) error {
+func HTTPHeadViaProxy(clashProxy C.Proxy, url string, ii int) error {
+	log.Debugln("Request proxy%d", ii)
 	ctx, cancel := context.WithTimeout(context.Background(), defaultURLTestTimeout)
 	defer cancel()
 
@@ -102,6 +104,7 @@ func HTTPHeadViaProxy(clashProxy C.Proxy, url string) error {
 		return err
 	}
 	defer conn.Close()
+	log.Debugln("Dial proxy%d", ii)
 
 	req, err := http.NewRequest(http.MethodHead, url, nil)
 	if err != nil {
@@ -129,11 +132,13 @@ func HTTPHeadViaProxy(clashProxy C.Proxy, url string) error {
 			return http.ErrUseLastResponse
 		},
 	}
+	log.Debugln("Fetch proxy%d", ii)
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
 	resp.Body.Close()
+	log.Debugln("Done proxy%d", ii)
 	return nil
 }
 
