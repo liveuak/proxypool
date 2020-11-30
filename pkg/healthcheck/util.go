@@ -102,11 +102,13 @@ func HTTPHeadViaProxy(clashProxy C.Proxy, url string, ii int) error {
 	}
 	log.Debugln("proxy %d line103 dial", ii)
 	conn, err := clashProxy.DialContext(ctx, &addr) // 建立到proxy server的connection，对Proxy的类别做了自适应相当于泛型
+	log.Debugln("proxy %d line105 dial", ii)
 	if err != nil {
+		log.Debugln("proxy %d line107 dial err", ii)
 		return err
 	}
 	defer conn.Close()
-	log.Debugln("proxy%d line109 dialed", ii)
+	log.Debugln("proxy%d line111 dialed", ii)
 
 	req, err := http.NewRequest(http.MethodHead, url, nil)
 	if err != nil {
