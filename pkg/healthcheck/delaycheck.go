@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Sansui233/proxypool/log"
 	"github.com/Sansui233/proxypool/pkg/proxy"
+	"sync"
 	"time"
 
 	"github.com/ivpusic/grpool"
@@ -22,6 +23,7 @@ func CleanBadProxiesWithGrpool(proxies []proxy.Proxy) (cproxies []proxy.Proxy) {
 	defer close(c)
 	count := len(proxies)
 	debugList := make([]int, 0)
+	m := sync.Mutex{}
 	log.Debugln("Count %d", count)
 	pool.WaitCount(len(proxies))
 	// 线程：延迟测试，测试过程通过grpool的job并发
@@ -32,10 +34,14 @@ func CleanBadProxiesWithGrpool(proxies []proxy.Proxy) (cproxies []proxy.Proxy) {
 			pp := p // 捕获，否则job执行时是按当前的p测试的
 			pool.JobQueue <- func() {
 				defer pool.JobDone()
+				m.Lock()
 				debugList = append(debugList, ii)
+				m.Unlock()
 				delay, err := testDelay(pp, ii)
+				m.Lock()
 				debugList = removeValueFromList(debugList, ii)
 				log.Debugln("%v", debugList)
+				m.Unlock()
 				if err == nil {
 					if ps, ok := ProxyStats.Find(p); ok {
 						ps.UpdatePSDelay(delay)
